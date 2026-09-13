@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Movable, resetLayout } from "@/components/Movable";
 import { cn } from "@/lib/utils";
 
 type View = "HOME" | "DASHBOARD" | "SETTINGS" | "ABOUT";
@@ -51,17 +52,19 @@ function HudPanel({
   children: React.ReactNode;
 }) {
   return (
-    <section className={cn("hud-panel group", className)}>
-      <div className="hud-panel-corner" aria-hidden="true" />
-      <header className="hud-panel-header">
-        <span className="flex items-center gap-2">
-          {icon}
-          {title}
-        </span>
-        <span className="status-dot" aria-label="Online" />
-      </header>
-      {children}
-    </section>
+    <Movable id={`panel:${title}`} className={className}>
+      <section className="hud-panel group">
+        <div className="hud-panel-corner" aria-hidden="true" />
+        <header className="hud-panel-header">
+          <span className="flex items-center gap-2">
+            {icon}
+            {title}
+          </span>
+          <span className="status-dot" aria-label="Online" />
+        </header>
+        {children}
+      </section>
+    </Movable>
   );
 }
 
