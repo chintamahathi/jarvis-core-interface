@@ -176,6 +176,10 @@
 @keyframes cursor { 50% { opacity: 0; } }
 @keyframes mic-pulse { 0%,100% { transform: scale(.9); opacity: .3; } 50% { transform: scale(1.12); opacity: .7; } }
 @keyframes drift-grid { to { background-position: 42px 42px, 42px 42px; } }
+@keyframes glow-drift-a { 0%,100% { transform: translate(-6%, -4%) scale(1); opacity: .5; } 50% { transform: translate(7%, 6%) scale(1.15); opacity: .8; } }
+@keyframes glow-drift-b { 0%,100% { transform: translate(5%, 8%) scale(1.1); opacity: .4; } 50% { transform: translate(-8%, -6%) scale(.95); opacity: .7; } }
+@keyframes particle-float { 0% { transform: translateY(12px) translateX(0); opacity: 0; } 15% { opacity: var(--p-opacity, .5); } 85% { opacity: var(--p-opacity, .5); } 100% { transform: translateY(-90px) translateX(10px); opacity: 0; } }
+@keyframes bg-sweep { 0% { transform: translateY(-30vh); opacity: 0; } 12% { opacity: .5; } 88% { opacity: .5; } 100% { transform: translateY(130vh); opacity: 0; } }
 
 @utility animate-fade-in { animation: fade-in .35s ease-out; }
 @utility animate-scale-in { animation: scale-in .25s ease-out; }
@@ -195,6 +199,12 @@
 .ambient-grid { position: absolute; inset: 0; z-index: -3; opacity: .42; background-image: linear-gradient(var(--hud-border) 1px, transparent 1px), linear-gradient(90deg, var(--hud-border) 1px, transparent 1px); background-size: 14.2vw 14.2vw; mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent); }
 .ambient-grid::before { content: ""; position: absolute; inset: 0; opacity: .13; background-image: radial-gradient(circle at center, var(--primary) 1px, transparent 1.4px); background-size: 41px 41px; animation: drift-grid 24s linear infinite; }
 .ambient-grid::after { content: ""; position: absolute; inset: 0; opacity: .08; background-size: 46px 80px; background-image: linear-gradient(30deg, var(--primary) 12%, transparent 12.5%, transparent 87%, var(--primary) 87.5%), linear-gradient(150deg, var(--primary) 12%, transparent 12.5%, transparent 87%, var(--primary) 87.5%); }
+.bg-glow { position: absolute; z-index: -4; width: 55vw; height: 55vw; border-radius: 50%; pointer-events: none; filter: blur(60px); mix-blend-mode: screen; }
+.bg-glow-a { top: -12%; left: -8%; background: radial-gradient(circle, color-mix(in oklab, var(--primary) 14%, transparent), transparent 65%); animation: glow-drift-a 26s ease-in-out infinite; }
+.bg-glow-b { bottom: -18%; right: -10%; background: radial-gradient(circle, oklch(0.35 0.1 220 / 22%), transparent 65%); animation: glow-drift-b 32s ease-in-out infinite; }
+.bg-particles { position: absolute; inset: 0; z-index: -2; pointer-events: none; overflow: hidden; }
+.bg-particles span { position: absolute; border-radius: 50%; background: var(--primary); box-shadow: 0 0 6px var(--primary); animation: particle-float linear infinite; }
+.bg-sweep { position: absolute; left: 0; right: 0; top: 0; height: 22vh; z-index: -1; pointer-events: none; background: linear-gradient(to bottom, transparent, color-mix(in oklab, var(--primary) 6%, transparent) 50%, transparent); animation: bg-sweep 14s linear infinite; }
 .scanlines { position: absolute; inset: 0; z-index: 20; pointer-events: none; opacity: .12; background: repeating-linear-gradient(to bottom, transparent 0 3px, oklch(0.8 0.08 190 / 7%) 4px); mix-blend-mode: screen; }
 .hud-frame { position: absolute; inset: 12px; z-index: 15; pointer-events: none; }
 .hud-frame i { position: absolute; width: 28px; height: 28px; border-color: var(--primary); opacity: .8; filter: drop-shadow(0 0 4px color-mix(in oklab, var(--primary) 55%, transparent)); }
