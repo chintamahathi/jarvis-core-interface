@@ -309,7 +309,11 @@ export function JarvisDashboard() {
             <Button key={item} variant="hudGhost" size="sm" className={cn("nav-button", activeView === item && "nav-active")} onClick={() => setActiveView(item)}>{item}</Button>
           ))}
         </nav>
-        <div className="top-status"><span>SYSTEM STATUS</span><strong><i /> SYSTEM ONLINE</strong></div>
+        <div className="top-status">
+          <span>SYSTEM STATUS</span>
+          <strong><i /> SYSTEM ONLINE</strong>
+          <Button variant="hudGhost" size="sm" className="layout-reset" onClick={resetLayout}>RESET LAYOUT</Button>
+        </div>
       </header>
 
       <div className="hud-layout">
@@ -320,12 +324,14 @@ export function JarvisDashboard() {
         </aside>
 
         <section className="central-zone">
-          <JarvisCore state={voiceState} />
-          <div className="greeting">
-            <span>GOOD AFTERNOON, SIR.</span>
-            <small>AT YOUR SERVICE, SIR.</small>
-            <i>— J.A.R.V.I.S.</i>
-          </div>
+          <Movable id="core"><JarvisCore state={voiceState} /></Movable>
+          <Movable id="greeting">
+            <div className="greeting">
+              <span>GOOD AFTERNOON, SIR.</span>
+              <small>AT YOUR SERVICE, SIR.</small>
+              <i>— J.A.R.V.I.S.</i>
+            </div>
+          </Movable>
           <VoiceControl state={voiceState} onActivate={activateVoice} />
           {activeView === "DASHBOARD" && <ExpandedDashboard />}
           {activeView === "SETTINGS" && <SettingsView onClose={() => setActiveView("HOME")} />}
@@ -335,7 +341,9 @@ export function JarvisDashboard() {
         <aside className="right-rail">
           <SystemInfo now={now} />
           <SystemLog />
-          <div className="security-readout"><ShieldCheck /><span>LAB SECURITY</span><strong>ARMED</strong></div>
+          <Movable id="security">
+            <div className="security-readout"><ShieldCheck /><span>LAB SECURITY</span><strong>ARMED</strong></div>
+          </Movable>
         </aside>
       </div>
     </main>
