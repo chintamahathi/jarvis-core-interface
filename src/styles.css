@@ -223,6 +223,10 @@
 .hud-layout { height:calc(100svh - 74px); padding:28px clamp(24px,3vw,56px) 30px; display:grid; grid-template-columns:clamp(190px,15vw,245px) minmax(430px,1fr) clamp(190px,15vw,245px); gap:clamp(18px,2.6vw,50px); }
 .left-rail,.right-rail { min-width:0; display:flex; flex-direction:column; gap:18px; }
 .left-rail { padding-top:18px; }.right-rail { padding-top:4px; }
+.movable { position:relative; cursor:grab; touch-action:none; will-change:transform; }
+.movable-dragging { cursor:grabbing; z-index:40; }
+.movable-dragging .hud-panel { border-color:var(--primary); box-shadow:var(--shadow-hud-strong); }
+.layout-reset { font-family:var(--font-mono); font-size:7px; letter-spacing:.14em; }
 .hud-panel { position:relative; min-width:0; padding:12px; border:1px solid var(--hud-border); border-radius:4px; background:linear-gradient(145deg, var(--hud-surface), color-mix(in oklab, var(--background) 88%, transparent)); box-shadow:var(--shadow-hud); transition:border-color .25s ease, box-shadow .25s ease, background .25s ease; overflow:hidden; }
 .hud-panel:hover { border-color:color-mix(in oklab, var(--primary) 68%, transparent); box-shadow:var(--shadow-hud-strong); background:linear-gradient(145deg, var(--hud-elevated), var(--hud-surface)); }
 .hud-panel::after { content:""; position:absolute; left:0; right:0; top:31px; height:1px; background:linear-gradient(90deg,var(--primary),transparent 65%); opacity:.32; }
