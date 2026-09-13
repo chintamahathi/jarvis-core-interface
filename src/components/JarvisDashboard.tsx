@@ -274,6 +274,36 @@ function AboutView({ onClose }: { onClose: () => void }) {
   );
 }
 
+const bgParticles = Array.from({ length: 42 }, (_, i) => ({
+  left: `${(i * 37 + 13) % 100}%`,
+  top: `${(i * 53 + 7) % 100}%`,
+  size: 1 + ((i * 7) % 3),
+  duration: 9 + ((i * 11) % 14),
+  delay: -((i * 17) % 20),
+  opacity: 0.25 + ((i * 13) % 40) / 100,
+}));
+
+function BgParticles() {
+  return (
+    <div className="bg-particles" aria-hidden="true">
+      {bgParticles.map((p, i) => (
+        <span
+          key={i}
+          style={{
+            left: p.left,
+            top: p.top,
+            width: p.size,
+            height: p.size,
+            opacity: p.opacity,
+            animationDuration: `${p.duration}s`,
+            animationDelay: `${p.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function JarvisDashboard() {
   const [activeView, setActiveView] = useState<View>("HOME");
   const [voiceState, setVoiceState] = useState<VoiceState>("IDLE");
