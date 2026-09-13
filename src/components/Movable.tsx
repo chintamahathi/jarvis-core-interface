@@ -33,7 +33,7 @@ export function Movable({
   children,
 }: {
   id: string;
-  className?: string;
+  className?: string | undefined;
   children: React.ReactNode;
 }) {
   const [offset, setOffset] = useState<Offset>({ x: 0, y: 0 });
