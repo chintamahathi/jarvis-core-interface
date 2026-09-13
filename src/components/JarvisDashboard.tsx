@@ -294,9 +294,9 @@ function BgParticles() {
             top: p.top,
             width: p.size,
             height: p.size,
-            opacity: p.opacity,
             animationDuration: `${p.duration}s`,
             animationDelay: `${p.delay}s`,
+            ["--p-opacity" as string]: p.opacity,
           }}
         />
       ))}
