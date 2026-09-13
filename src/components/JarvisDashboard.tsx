@@ -294,7 +294,11 @@ export function JarvisDashboard() {
 
   return (
     <main className="jarvis-shell">
+      <div className="bg-glow bg-glow-a" aria-hidden="true" />
+      <div className="bg-glow bg-glow-b" aria-hidden="true" />
       <div className="ambient-grid" aria-hidden="true" />
+      <BgParticles />
+      <div className="bg-sweep" aria-hidden="true" />
       <div className="scanlines" aria-hidden="true" />
       <div className="hud-frame" aria-hidden="true"><i /><i /><i /><i /></div>
       <div className="edge-markers" aria-hidden="true"><span>SYS.48</span><span>LATENCY 012MS</span><span>SECURE CHANNEL</span></div>
