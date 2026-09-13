@@ -1,3 +1,4 @@
+import { Check, Move } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -38,7 +39,9 @@ export function Movable({
 }) {
   const [offset, setOffset] = useState<Offset>({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
+  const [saved, setSaved] = useState(false);
   const start = useRef<{ px: number; py: number; ox: number; oy: number } | null>(null);
+  const savedTimer = useRef<number | null>(null);
 
   useEffect(() => {
     const stored = readStore()[id];
@@ -48,6 +51,12 @@ export function Movable({
     return () => window.removeEventListener(RESET_EVENT, onReset);
   }, [id]);
 
+  useEffect(() => {
+    return () => {
+      if (savedTimer.current) window.clearTimeout(savedTimer.current);
+    };
+  }, []);
+
   const onPointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if ((event.target as HTMLElement).closest("button,a,input,select,textarea")) return;
@@ -55,6 +64,7 @@ export function Movable({
       event.preventDefault();
       start.current = { px: event.clientX, py: event.clientY, ox: offset.x, oy: offset.y };
       setDragging(true);
+      setSaved(false);
       event.currentTarget.setPointerCapture(event.pointerId);
     },
     [offset],
@@ -73,6 +83,13 @@ export function Movable({
     writeOffset(id, offset);
   }, [id, offset]);
 
+  const savePosition = useCallback(() => {
+    writeOffset(id, offset);
+    setSaved(true);
+    if (savedTimer.current) window.clearTimeout(savedTimer.current);
+    savedTimer.current = window.setTimeout(() => setSaved(false), 1600);
+  }, [id, offset]);
+
   return (
     <div
       className={cn("movable", dragging && "movable-dragging", className)}
@@ -82,6 +99,21 @@ export function Movable({
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
     >
+      <div className="movable-tools" aria-hidden={false}>
+        <span className="movable-tool movable-tool-move" title="Drag to move">
+          <Move size={11} strokeWidth={2} />
+          <em>MOVE</em>
+        </span>
+        <button
+          type="button"
+          className={cn("movable-tool movable-tool-save", saved && "movable-tool-saved")}
+          onClick={savePosition}
+          title="Save position"
+        >
+          <Check size={11} strokeWidth={2.4} />
+          <em>{saved ? "SAVED" : "SAVE"}</em>
+        </button>
+      </div>
       {children}
     </div>
   );
