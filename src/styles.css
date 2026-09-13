@@ -233,8 +233,9 @@
 .hud-layout { height:calc(100svh - 74px); padding:22px clamp(20px,2.2vw,40px) 26px; display:grid; grid-template-columns:clamp(228px,19vw,310px) minmax(420px,1fr) clamp(228px,19vw,310px); gap:clamp(16px,1.8vw,30px); }
 .left-rail,.right-rail { min-width:0; display:flex; flex-direction:column; gap:14px; }
 .left-rail { padding-top:10px; }.right-rail { padding-top:10px; }
-.left-rail>.movable:last-child,.left-rail>.hud-panel:last-child,.right-rail>.movable:last-child,.right-rail>.hud-panel:last-child { flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
-.left-rail>.movable:last-child>.hud-panel,.right-rail>.movable:last-child>.hud-panel { flex:1 1 auto; min-height:0; }
+.left-rail>.movable:last-child,.left-rail>.hud-panel:last-child,.right-rail>.movable:last-child,.right-rail>.hud-panel:last-child { flex:0 0 auto; }
+.left-rail,.right-rail { justify-content:flex-start; }
+.left-rail::after,.right-rail::after { content:""; flex:1 1 auto; min-height:0; }
 .movable { position:relative; cursor:grab; touch-action:none; will-change:transform; }
 .movable-dragging { cursor:grabbing; z-index:40; }
 .movable-dragging .hud-panel { border-color:var(--primary); box-shadow:var(--shadow-hud-strong); }
