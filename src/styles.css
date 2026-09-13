@@ -214,7 +214,7 @@
 .hud-frame i:nth-child(4) { bottom: 0; right: 0; border-bottom: 1px solid; border-right: 1px solid; }
 .edge-markers { position: absolute; inset: auto 3% 1.5%; display: flex; justify-content: space-between; font: 500 8px var(--font-mono); color: var(--muted-foreground); letter-spacing: .08em; opacity: .75; }
 
-.topbar { position: relative; z-index: 10; width: min(72%, 1100px); height: 62px; margin: 12px auto 0; display: grid; grid-template-columns: minmax(230px,1fr) auto minmax(150px,.7fr); align-items: center; gap: 24px; padding: 0 28px; background: linear-gradient(90deg, var(--hud-elevated), color-mix(in oklab, var(--hud-surface) 92%, transparent)); border-block: 1px solid var(--hud-border); box-shadow: 0 12px 30px oklch(0 0 0 / 22%); clip-path: polygon(2% 0, 98% 0, 100% 24%, 100% 76%, 98% 100%, 2% 100%, 0 76%, 0 24%); }
+.topbar { position: relative; z-index: 10; width: min(96%, 1700px); height: 62px; margin: 12px auto 0; display: grid; grid-template-columns: minmax(230px,1fr) auto minmax(150px,.7fr); align-items: center; gap: 24px; padding: 0 40px; background: linear-gradient(90deg, var(--hud-elevated), color-mix(in oklab, var(--hud-surface) 92%, transparent)); border-block: 1px solid var(--hud-border); box-shadow: 0 12px 30px oklch(0 0 0 / 22%); clip-path: polygon(1% 0, 99% 0, 100% 24%, 100% 76%, 99% 100%, 1% 100%, 0 76%, 0 24%); }
 .topbar::before,.topbar::after { content:""; position:absolute; top:0; bottom:0; width:1px; background: var(--primary); box-shadow: 0 0 8px var(--primary); }
 .topbar::before { left:2%; }.topbar::after { right:2%; }
 .brand-block { min-width:0; display:flex; flex-direction:column; }
