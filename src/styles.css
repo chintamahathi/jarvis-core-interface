@@ -216,7 +216,7 @@
 
 .topbar { position: relative; z-index: 10; width: min(96%, 1700px); height: 62px; margin: 12px auto 0; display: grid; grid-template-columns: minmax(230px,1fr) auto minmax(150px,.7fr); align-items: center; gap: 24px; padding: 0 40px; background: linear-gradient(90deg, var(--hud-elevated), color-mix(in oklab, var(--hud-surface) 92%, transparent)); border-block: 1px solid var(--hud-border); box-shadow: 0 12px 30px oklch(0 0 0 / 22%); clip-path: polygon(1% 0, 99% 0, 100% 24%, 100% 76%, 99% 100%, 1% 100%, 0 76%, 0 24%); }
 .topbar::before,.topbar::after { content:""; position:absolute; top:0; bottom:0; width:1px; background: var(--primary); box-shadow: 0 0 8px var(--primary); }
-.topbar::before { left:2%; }.topbar::after { right:2%; }
+.topbar::before { left:1%; }.topbar::after { right:1%; }
 .brand-block { min-width:0; display:flex; flex-direction:column; }
 .brand-block strong { font: 600 20px var(--font-mono); letter-spacing: .12em; color: var(--primary); text-shadow: 0 0 10px color-mix(in oklab, var(--primary) 70%, transparent); white-space: nowrap; }
 .brand-block span { margin-top:2px; font: 500 8px var(--font-mono); letter-spacing:.1em; color:var(--muted-foreground); white-space:nowrap; }
