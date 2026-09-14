@@ -24,19 +24,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Movable, resetLayout } from "@/components/Movable";
 import { cn } from "@/lib/utils";
+import {
+  useJarvisAgent,
+  VoiceState,
+  TelemetryData,
+  ActivityItem,
+  SystemLogEntry,
+  DebugInfo,
+} from "@/hooks/useJarvisAgent";
 
 type View = "HOME" | "DASHBOARD" | "SETTINGS" | "ABOUT";
-type VoiceState = "IDLE" | "LISTENING" | "PROCESSING" | "RESPONDING";
-
-const activityRows = [
-  ["16:14:52", "RESPONDING", "warning"],
-  ["16:14:31", "LISTENING", "active"],
-  ["16:14:21", "COMMAND RECEIVED", "active"],
-  ["16:14:05", "PROCESSING", "active"],
-  ["16:13:49", "LISTENING", "active"],
-  ["16:13:34", "STANDBY", "muted"],
-  ["16:13:20", "DISCONNECTED", "danger"],
-] as const;
 
 const navItems: View[] = ["HOME", "DASHBOARD", "SETTINGS", "ABOUT"];
 
@@ -81,11 +78,11 @@ function LocationPanel() {
           </svg>
         </div>
         <div className="location-copy">
-          <p className="location-city"><span>🇮🇳</span> Bengaluru</p>
-          <p>Karnataka, India</p>
+          <p className="location-city"><span>🇮🇳</span> Local Station</p>
+          <p>Windows Host Terminal</p>
           <div className="coordinate-row">
-            <span>LAT 12.9716° N</span>
-            <span>LON 77.5946° E</span>
+            <span>SYS HOST // WIN32</span>
+            <span>SECURE LOCAL LOOP</span>
           </div>
         </div>
       </div>
@@ -93,24 +90,62 @@ function LocationPanel() {
   );
 }
 
-const telemetry = [
-  { label: "BATTERY", value: "61%", icon: BatteryCharging, tone: "warning" },
-  { label: "NETWORK", value: "ONLINE", icon: Wifi, tone: "active" },
-  { label: "CONNECTION", value: "4G", icon: Network, tone: "active" },
-  { label: "BLUETOOTH", value: "READY", icon: Bluetooth, tone: "active" },
-] as const;
+function StatusPanel({
+  expanded = false,
+  telemetry,
+}: {
+  expanded?: boolean;
+  telemetry: TelemetryData;
+}) {
+  const batteryTone =
+    telemetry.batteryPercent < 20
+      ? "danger"
+      : telemetry.batteryPercent < 50
+      ? "warning"
+      : "active";
 
-function StatusPanel({ expanded = false }: { expanded?: boolean }) {
+  const telemetryItems: { label: string; value: string; icon: any; tone: string; meter?: number }[] = [
+    {
+      label: "BATTERY",
+      value: `${telemetry.batteryPercent}%`,
+      icon: BatteryCharging,
+      tone: batteryTone,
+      meter: telemetry.batteryPercent,
+    },
+    {
+      label: "NETWORK",
+      value: telemetry.networkStatus,
+      icon: Wifi,
+      tone: telemetry.networkStatus === "ONLINE" ? "active" : "danger",
+    },
+    {
+      label: "CONNECTION",
+      value: telemetry.networkType,
+      icon: Network,
+      tone: "active",
+    },
+    {
+      label: "BLUETOOTH",
+      value: "READY",
+      icon: Bluetooth,
+      tone: "active",
+    },
+  ];
+
   return (
     <HudPanel title="SYSTEM STATUS" icon={<Gauge className="size-3" />}>
       <div className={cn("telemetry-grid", expanded && "telemetry-grid-expanded")}>
-        {telemetry.map(({ label, value, icon: Icon, tone }) => (
+        {telemetryItems.map(({ label, value, icon: Icon, tone, meter }) => (
           <div className="telemetry-cell" key={label}>
             <Icon className="telemetry-icon" />
             <div className="min-w-0">
               <span>{label}</span>
               <strong className={`tone-${tone}`}>{value}</strong>
-              {label === "BATTERY" && <i className="battery-meter"><b /></i>}
+              {label === "BATTERY" && (
+                <i className="battery-meter">
+                  <b style={{ width: `${meter}%` }} />
+                </i>
+              )}
             </div>
           </div>
         ))}
@@ -119,14 +154,24 @@ function StatusPanel({ expanded = false }: { expanded?: boolean }) {
   );
 }
 
-function ActivityPanel() {
+function ActivityPanel({
+  activities,
+  voiceState,
+}: {
+  activities: ActivityItem[];
+  voiceState: VoiceState;
+}) {
   return (
     <HudPanel title="ACTIVITY MONITOR" icon={<Activity className="size-3" />}>
-      <div className="response-state"><Volume2 /> <span>RESPONDING</span></div>
+      <div className="response-state">
+        <Volume2 /> <span>{voiceState}</span>
+      </div>
       <div className="activity-stream">
-        {activityRows.map(([time, state, tone]) => (
-          <div className="activity-row" key={time}>
-            <time>{time}</time><i /><span className={`tone-${tone}`}>{state}</span>
+        {activities.map((act) => (
+          <div className="activity-row" key={act.id}>
+            <time>{act.time}</time>
+            <i />
+            <span className={`tone-${act.tone}`}>{act.state}</span>
           </div>
         ))}
       </div>
@@ -135,16 +180,22 @@ function ActivityPanel() {
 }
 
 function JarvisCore({ state }: { state: VoiceState }) {
-  const points = useMemo(() => Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    x: 16 + ((i * 37) % 70),
-    y: 12 + ((i * 53) % 76),
-    delay: (i % 7) * 0.42,
-  })), []);
+  const points = useMemo(
+    () =>
+      Array.from({ length: 20 }, (_, i) => ({
+        id: i,
+        x: 16 + ((i * 37) % 70),
+        y: 12 + ((i * 53) % 76),
+        delay: (i % 7) * 0.42,
+      })),
+    []
+  );
 
   return (
     <div className={cn("core-stage", `core-${state.toLowerCase()}`)}>
-      <div className="core-kicker"><Cpu /> J.A.R.V.I.S. CORE <span>ONLINE</span></div>
+      <div className="core-kicker">
+        <Cpu /> J.A.R.V.I.S. CORE <span>ONLINE</span>
+      </div>
       <div className="core-assembly" role="img" aria-label={`JARVIS core ${state.toLowerCase()}`}>
         <div className="core-reticle reticle-one" />
         <div className="core-reticle reticle-two" />
@@ -175,12 +226,33 @@ function JarvisCore({ state }: { state: VoiceState }) {
 function Waveform({ active }: { active: boolean }) {
   return (
     <div className={cn("waveform", active && "waveform-active")} aria-hidden="true">
-      {Array.from({ length: 17 }, (_, index) => <i key={index} style={{ animationDelay: `${index * -0.08}s` }} />)}
+      {Array.from({ length: 17 }, (_, index) => (
+        <i key={index} style={{ animationDelay: `${index * -0.08}s` }} />
+      ))}
     </div>
   );
 }
 
-function VoiceControl({ state, onActivate }: { state: VoiceState; onActivate: () => void }) {
+function VoiceControl({
+  state,
+  executingLabel,
+  interimTranscript,
+  onActivate,
+}: {
+  state: VoiceState;
+  executingLabel?: string | null;
+  interimTranscript?: string;
+  onActivate: () => void;
+}) {
+  const displayText =
+    state === "LISTENING" && interimTranscript
+      ? interimTranscript
+      : state === "EXECUTING" && executingLabel
+      ? executingLabel
+      : state === "IDLE"
+      ? "TAP TO SPEAK"
+      : state;
+
   return (
     <div className="voice-control">
       <Waveform active={state !== "IDLE"} />
@@ -190,18 +262,26 @@ function VoiceControl({ state, onActivate }: { state: VoiceState; onActivate: ()
         className={cn("mic-button", state !== "IDLE" && "mic-button-active")}
         onClick={onActivate}
         disabled={state !== "IDLE"}
-        aria-label={state === "IDLE" ? "Start simulated voice interaction" : state}
+        aria-label={state === "IDLE" ? "Activate JARVIS voice control" : state}
       >
         <Mic />
         <span className="mic-ring" />
       </Button>
-      <p>{state === "IDLE" ? "TAP TO SPEAK" : state}</p>
+      <p className="max-w-[280px] truncate text-center">{displayText}</p>
       <span className="voice-sequence">VOICE CHANNEL // 01</span>
     </div>
   );
 }
 
-function SystemInfo({ now }: { now: Date }) {
+function SystemInfo({
+  now,
+  telemetry,
+  commandCount,
+}: {
+  now: Date;
+  telemetry: TelemetryData;
+  commandCount: number;
+}) {
   const clock = now.toLocaleTimeString("en-GB", { hour12: false });
   const date = now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase();
   return (
@@ -210,54 +290,203 @@ function SystemInfo({ now }: { now: Date }) {
       <div className="date-line">{date}</div>
       <div className="weather-row">
         <CloudSun />
-        <div><strong>30°C</strong><span>CLEAR</span></div>
+        <div><strong>28°C</strong><span>CLEAR</span></div>
       </div>
-      <div className="system-location"><MapPin /> Bengaluru</div>
+      <div className="system-location"><MapPin /> Windows Host</div>
       <div className="info-divider"><i /></div>
       <div className="stat-pair">
-        <div><span>UPTIME</span><strong>10h</strong></div>
-        <div><span>COMMANDS</span><strong>3</strong></div>
+        <div><span>UPTIME</span><strong>{telemetry.uptimeFormatted}</strong></div>
+        <div><span>COMMANDS</span><strong>{commandCount}</strong></div>
       </div>
     </HudPanel>
   );
 }
 
-function SystemLog() {
+function SystemLog({
+  lastCommand,
+  lastResponse,
+  systemLogs,
+}: {
+  lastCommand: string;
+  lastResponse: string;
+  systemLogs: SystemLogEntry[];
+}) {
   return (
     <HudPanel title="SYSTEM_LOG // J.A.R.V.I.S." icon={<TerminalSquare className="size-3" />} className="system-log">
-      <div className="command-line"><ChevronRight /><span>USER&gt;</span> initialize lab security systems<i /></div>
+      <div className="command-line">
+        <ChevronRight />
+        <span>USER&gt;</span> {lastCommand}
+        <i />
+      </div>
+      <div className="text-[7.5px] font-mono text-muted-foreground mt-0.5 truncate">
+        JARVIS&gt; {lastResponse}
+      </div>
+      {systemLogs && systemLogs.length > 0 && (
+        <div className="mt-2 space-y-0.5 max-h-[88px] overflow-y-auto font-mono text-[7.5px] border-t border-border/40 pt-1">
+          {systemLogs.slice(-4).map((entry) => (
+            <div key={entry.id} className="flex items-center gap-1.5 leading-tight">
+              <span className={cn(
+                "px-1 py-0.2 rounded text-[6.5px] font-bold",
+                entry.level === "INFO" && "text-cyan-400 bg-cyan-950/40",
+                entry.level === "SUCCESS" && "text-emerald-400 bg-emerald-950/40",
+                entry.level === "WARN" && "text-amber-400 bg-amber-950/40",
+                entry.level === "ERROR" && "text-rose-400 bg-rose-950/40"
+              )}>
+                [{entry.level}]
+              </span>
+              <span className="text-foreground/90 truncate">{entry.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </HudPanel>
   );
 }
 
-function ExpandedDashboard() {
+function DeveloperDebugPanel({
+  debugInfo,
+  onClose,
+}: {
+  debugInfo: DebugInfo;
+  onClose: () => void;
+}) {
+  return (
+    <div className="hud-debug-panel animate-scale-in">
+      <div className="hud-debug-header">
+        <span className="flex items-center gap-2">
+          <TerminalSquare className="size-3 text-primary" />
+          DEVELOPER ACTION & INTENT PIPELINE
+        </span>
+        <button
+          onClick={onClose}
+          className="text-muted-foreground hover:text-primary transition-colors text-[11px] px-1"
+          aria-label="Close debug console"
+        >
+          ✕
+        </button>
+      </div>
+      <div className="hud-debug-grid">
+        <div>
+          <span>USER COMMAND</span>
+          <strong>{debugInfo.userCommand}</strong>
+        </div>
+        <div>
+          <span>TRANSCRIPT</span>
+          <strong>{debugInfo.transcript}</strong>
+        </div>
+        <div>
+          <span>INTENT</span>
+          <strong className="text-primary">{debugInfo.intent}</strong>
+        </div>
+        <div>
+          <span>TARGET</span>
+          <strong>{debugInfo.target}</strong>
+        </div>
+        <div>
+          <span>PERMISSION</span>
+          <strong>{debugInfo.permission}</strong>
+        </div>
+        <div>
+          <span>LOCAL AGENT</span>
+          <strong className={debugInfo.agentStatus === "CONNECTED" ? "text-success" : "text-danger"}>
+            ● {debugInfo.agentStatus}
+          </strong>
+        </div>
+        <div>
+          <span>ACTION</span>
+          <strong>{debugInfo.action}</strong>
+        </div>
+        <div>
+          <span>RESULT</span>
+          <strong
+            className={
+              debugInfo.result === "SUCCESS"
+                ? "text-success"
+                : debugInfo.result === "FAILED"
+                ? "text-danger"
+                : "text-warning"
+            }
+          >
+            {debugInfo.result}
+          </strong>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExpandedDashboard({
+  telemetry,
+  latencyMs,
+}: {
+  telemetry: TelemetryData;
+  latencyMs: number;
+}) {
   return (
     <div className="expanded-overlay animate-fade-in">
       <HudPanel title="EXTENDED DIAGNOSTICS" icon={<Cpu className="size-3" />}>
         <div className="diagnostics-grid">
-          {["NEURAL LOAD", "MEMORY MATRIX", "SECURITY GRID", "RESPONSE LATENCY"].map((label, i) => (
-            <div key={label}><span>{label}</span><strong>{["23%", "48%", "SECURE", "12ms"][i]}</strong><i><b style={{ width: `${[23, 48, 92, 38][i]}%` }} /></i></div>
-          ))}
+          <div>
+            <span>NEURAL LOAD</span>
+            <strong>{telemetry.cpuUsagePercent}%</strong>
+            <i><b style={{ width: `${telemetry.cpuUsagePercent}%` }} /></i>
+          </div>
+          <div>
+            <span>MEMORY MATRIX</span>
+            <strong>{telemetry.memoryUsagePercent}% ({telemetry.freeMemoryGB}GB FREE)</strong>
+            <i><b style={{ width: `${telemetry.memoryUsagePercent}%` }} /></i>
+          </div>
+          <div>
+            <span>SECURITY GRID</span>
+            <strong>SECURE</strong>
+            <i><b style={{ width: `92%` }} /></i>
+          </div>
+          <div>
+            <span>RESPONSE LATENCY</span>
+            <strong>{latencyMs}ms</strong>
+            <i><b style={{ width: `${Math.min(100, latencyMs * 3)}%` }} /></i>
+          </div>
         </div>
       </HudPanel>
     </div>
   );
 }
 
-function SettingsView({ onClose }: { onClose: () => void }) {
+function SettingsView({
+  showDebug,
+  onToggleDebug,
+  onClose,
+}: {
+  showDebug: boolean;
+  onToggleDebug: () => void;
+  onClose: () => void;
+}) {
   const [options, setOptions] = useState([true, true, false, true]);
   const labels = ["AMBIENT SCANNING", "VOICE FEEDBACK", "PRIORITY ALERTS", "HOLOGRAPHIC TRACKING"];
   return (
     <div className="modal-view animate-scale-in">
-      <div className="modal-heading"><div><span>CORE CONFIGURATION</span><h2>SETTINGS</h2></div><Button variant="hudGhost" size="icon" onClick={onClose} aria-label="Close settings"><X /></Button></div>
+      <div className="modal-heading">
+        <div><span>CORE CONFIGURATION</span><h2>SETTINGS</h2></div>
+        <Button variant="hudGhost" size="icon" onClick={onClose} aria-label="Close settings"><X /></Button>
+      </div>
       <div className="settings-list">
         {labels.map((label, i) => (
-          <button key={label} className="setting-row" onClick={() => setOptions((current) => current.map((item, index) => index === i ? !item : item))}>
-            <span><Settings2 />{label}</span><i className={options[i] ? "is-on" : ""}><b /></i>
+          <button
+            key={label}
+            className="setting-row"
+            onClick={() => setOptions((current) => current.map((item, index) => (index === i ? !item : item)))}
+          >
+            <span><Settings2 />{label}</span>
+            <i className={options[i] ? "is-on" : ""}><b /></i>
           </button>
         ))}
+
+        <button className="setting-row" onClick={onToggleDebug}>
+          <span><TerminalSquare />DEVELOPER DEBUG CONSOLE</span>
+          <i className={showDebug ? "is-on" : ""}><b /></i>
+        </button>
       </div>
-      <p className="modal-note">CONFIGURATION CHANGES ARE LOCAL TO THIS SESSION.</p>
+      <p className="modal-note">LOCAL WINDOWS CONTROLLER: PORT 8765 // VERIFIED PIPELINE ACTIVE.</p>
     </div>
   );
 }
@@ -265,11 +494,16 @@ function SettingsView({ onClose }: { onClose: () => void }) {
 function AboutView({ onClose }: { onClose: () => void }) {
   return (
     <div className="modal-view about-view animate-scale-in">
-      <div className="modal-heading"><div><span>INTELLIGENCE PROFILE</span><h2>J.A.R.V.I.S.</h2></div><Button variant="hudGhost" size="icon" onClick={onClose} aria-label="Close information"><X /></Button></div>
+      <div className="modal-heading">
+        <div><span>INTELLIGENCE PROFILE</span><h2>J.A.R.V.I.S.</h2></div>
+        <Button variant="hudGhost" size="icon" onClick={onClose} aria-label="Close information"><X /></Button>
+      </div>
       <div className="about-mark"><Sparkles /></div>
       <p>JUST A RATHER VERY INTELLIGENT SYSTEM</p>
-      <div className="about-copy">A private adaptive intelligence interface engineered for situational awareness, precision assistance, and calm command execution.</div>
-      <div className="about-tags"><span>MARK VII</span><span>CORE ONLINE</span><span>LOCAL SIMULATION</span></div>
+      <div className="about-copy">
+        A real voice-controlled Windows personal assistant interface engineered for situational awareness, live system telemetry, and autonomous local command execution.
+      </div>
+      <div className="about-tags"><span>MARK VII</span><span>CORE ONLINE</span><span>WINDOWS LOCAL AGENT</span></div>
     </div>
   );
 }
@@ -306,20 +540,48 @@ function BgParticles() {
 
 export function JarvisDashboard() {
   const [activeView, setActiveView] = useState<View>("HOME");
-  const [voiceState, setVoiceState] = useState<VoiceState>("IDLE");
+  const [showDebug, setShowDebug] = useState(true);
+  const [commandInput, setCommandInput] = useState("");
   const [now, setNow] = useState(() => new Date());
+
+  const {
+    voiceState,
+    executingLabel,
+    interimTranscript,
+    isConnected,
+    latencyMs,
+    telemetry,
+    activities,
+    systemLogs,
+    lastCommand,
+    lastResponse,
+    commandCount,
+    pendingConfirmation,
+    debugInfo,
+    startListening,
+    resolveConfirmation,
+    sendCommandText,
+  } = useJarvisAgent();
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
 
-  const activateVoice = () => {
-    if (voiceState !== "IDLE") return;
-    setVoiceState("LISTENING");
-    window.setTimeout(() => setVoiceState("PROCESSING"), 1800);
-    window.setTimeout(() => setVoiceState("RESPONDING"), 3600);
-    window.setTimeout(() => setVoiceState("IDLE"), 5600);
+  const hour = now.getHours();
+  const greetingText =
+    hour < 12
+      ? "GOOD MORNING, SIR."
+      : hour < 18
+      ? "GOOD AFTERNOON, SIR."
+      : "GOOD EVENING, SIR.";
+
+  const handleCommandSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (commandInput.trim()) {
+      sendCommandText(commandInput.trim());
+      setCommandInput("");
+    }
   };
 
   return (
@@ -331,7 +593,16 @@ export function JarvisDashboard() {
       <div className="bg-sweep" aria-hidden="true" />
       <div className="scanlines" aria-hidden="true" />
       <div className="hud-frame" aria-hidden="true"><i /><i /><i /><i /></div>
-      <div className="edge-markers" aria-hidden="true"><span>SYS.48</span><span>LATENCY 012MS</span><span>SECURE CHANNEL</span></div>
+      <div className="edge-markers" aria-hidden="true">
+        <span>SYS.48</span>
+        <span>LATENCY {String(latencyMs).padStart(3, "0")}MS</span>
+        <button
+          onClick={() => setShowDebug((prev) => !prev)}
+          className="hover:text-primary transition-colors cursor-pointer"
+        >
+          CONSOLE: {showDebug ? "ACTIVE" : "HIDDEN"}
+        </button>
+      </div>
 
       <header className="topbar">
         <div className="brand-block">
@@ -340,43 +611,118 @@ export function JarvisDashboard() {
         </div>
         <nav aria-label="Primary navigation">
           {navItems.map((item) => (
-            <Button key={item} variant="hudGhost" size="sm" className={cn("nav-button", activeView === item && "nav-active")} onClick={() => setActiveView(item)}>{item}</Button>
+            <Button
+              key={item}
+              variant="hudGhost"
+              size="sm"
+              className={cn("nav-button", activeView === item && "nav-active")}
+              onClick={() => setActiveView(item)}
+            >
+              {item}
+            </Button>
           ))}
         </nav>
         <div className="top-status">
-          <span>SYSTEM STATUS</span>
-          <strong><i /> SYSTEM ONLINE</strong>
-          <Button variant="hudGhost" size="sm" className="layout-reset" onClick={resetLayout}>RESET LAYOUT</Button>
+          <span>LOCAL AGENT</span>
+          <strong style={{ color: isConnected ? "var(--success)" : "var(--danger)" }}>
+            <i style={{ background: isConnected ? "var(--success)" : "var(--danger)" }} />{" "}
+            {isConnected ? "CONNECTED" : "OFFLINE"}
+          </strong>
+          <Button variant="hudGhost" size="sm" className="layout-reset" onClick={resetLayout}>
+            RESET LAYOUT
+          </Button>
         </div>
       </header>
 
       <div className="hud-layout">
         <aside className="left-rail">
           <LocationPanel />
-          <StatusPanel expanded={activeView === "DASHBOARD"} />
-          <ActivityPanel />
+          <StatusPanel expanded={activeView === "DASHBOARD"} telemetry={telemetry} />
+          <ActivityPanel activities={activities} voiceState={voiceState} />
         </aside>
 
         <section className="central-zone">
           <Movable id="core"><JarvisCore state={voiceState} /></Movable>
           <Movable id="greeting">
             <div className="greeting">
-              <span>GOOD AFTERNOON, SIR.</span>
+              <span>{greetingText}</span>
               <small>AT YOUR SERVICE, SIR.</small>
               <i>— J.A.R.V.I.S.</i>
             </div>
           </Movable>
-          <VoiceControl state={voiceState} onActivate={activateVoice} />
-          {activeView === "DASHBOARD" && <ExpandedDashboard />}
-          {activeView === "SETTINGS" && <SettingsView onClose={() => setActiveView("HOME")} />}
+
+          {/* Real Command Input for Direct Testing of Voice & Action Pipeline */}
+          <form onSubmit={handleCommandSubmit} className="hud-command-bar">
+            <ChevronRight />
+            <input
+              type="text"
+              placeholder='Type a command to test (e.g. "open youtube", "open vs code")...'
+              value={commandInput}
+              onChange={(e) => setCommandInput(e.target.value)}
+              aria-label="Direct Command Input"
+            />
+            <Button type="submit" variant="hud" size="sm" className="h-5 px-2 text-[8px]">
+              RUN
+            </Button>
+          </form>
+
+          <VoiceControl
+            state={voiceState}
+            executingLabel={executingLabel}
+            interimTranscript={interimTranscript}
+            onActivate={startListening}
+          />
+
+          {/* Tactical Confirmation Dialog for Destructive / Power Operations */}
+          {pendingConfirmation && (
+            <div className="hud-confirm-overlay animate-scale-in">
+              <h3>AUTHORIZATION REQUIRED</h3>
+              <p>{pendingConfirmation.prompt}</p>
+              <div className="hud-confirm-actions">
+                <Button variant="hud" size="sm" onClick={() => resolveConfirmation(true)}>
+                  CONFIRM
+                </Button>
+                <Button variant="hudGhost" size="sm" onClick={() => resolveConfirmation(false)}>
+                  ABORT
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Developer Debug Console */}
+          {showDebug && (
+            <DeveloperDebugPanel
+              debugInfo={debugInfo}
+              onClose={() => setShowDebug(false)}
+            />
+          )}
+
+          {activeView === "DASHBOARD" && (
+            <ExpandedDashboard telemetry={telemetry} latencyMs={latencyMs} />
+          )}
+          {activeView === "SETTINGS" && (
+            <SettingsView
+              showDebug={showDebug}
+              onToggleDebug={() => setShowDebug((prev) => !prev)}
+              onClose={() => setActiveView("HOME")}
+            />
+          )}
           {activeView === "ABOUT" && <AboutView onClose={() => setActiveView("HOME")} />}
         </section>
 
         <aside className="right-rail">
-          <SystemInfo now={now} />
-          <SystemLog />
+          <SystemInfo now={now} telemetry={telemetry} commandCount={commandCount} />
+          <SystemLog
+            lastCommand={lastCommand}
+            lastResponse={lastResponse}
+            systemLogs={systemLogs}
+          />
           <Movable id="security">
-            <div className="security-readout"><ShieldCheck /><span>LAB SECURITY</span><strong>ARMED</strong></div>
+            <div className="security-readout">
+              <ShieldCheck />
+              <span>SECURITY GRID</span>
+              <strong>ENFORCED</strong>
+            </div>
           </Movable>
         </aside>
       </div>
